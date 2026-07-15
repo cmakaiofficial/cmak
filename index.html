@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Print-Ready Converter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f1115;
+    color: #e6e8ec;
+    padding: 16px 12px 40px;
+  }
+  .app { max-width: 920px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #9aa1ac; margin-top: 0; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
+  @media (min-width: 720px) {
+    .grid { grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+  }
+  .panel { background: #171a21; border: 1px solid #262b35; border-radius: 12px; padding: 16px; }
+  @media (min-width: 720px) { .panel { padding: 20px; } }
+  label { display: block; font-size: 13px; color: #b7bcc6; margin-bottom: 14px; }
+  input, select, button { font-family: inherit; }
+  input[type="number"], select {
+    display: block; width: 100%; margin-top: 6px;
+    background: #0f1115; color: #e6e8ec; border: 1px solid #2d3340;
+    border-radius: 8px; padding: 10px 8px; font-size: 16px;
+  }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
+  .checkbox-row input { width: auto; margin: 0; }
+  #dropzone {
+    border: 2px dashed #2d3340; border-radius: 10px; padding: 20px; text-align: center;
+    cursor: pointer; margin-bottom: 16px; color: #9aa1ac; min-height: 110px;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1.4;
+  }
+  #dropzone img { max-height: 200px; max-width: 100%; border-radius: 6px; }
+  button#convertBtn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: #4f7cff; color: white; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button#convertBtn:disabled { background: #34394a; cursor: not-allowed; }
+  .error { color: #ff6b6b; font-size: 13px; margin-top: 10px; }
+  .muted { color: #6b7280; font-size: 12px; }
+  #canvasWrap { display: flex; justify-content: center; background: #0a0b0e; border-radius: 8px; padding: 12px; }
+  canvas { max-width: 100%; box-shadow: 0 0 0 1px rgba(255,255,255,0.08); }
+  .report p { font-size: 14px; color: #cbd0d8; }
+  .warnings {
+    background: #2a2311; border: 1px solid #4a3d15; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; color: #f2d477; margin-top: 10px;
+  }
+  .warnings ul { margin: 8px 0 0; padding-left: 18px; }
+  .download-btn {
+    display: inline-block; margin-top: 12px; padding: 12px 18px;
+    background: #34c77b; color: #08120c; font-weight: 600; text-decoration: none;
+    border-radius: 8px; text-align: center; width: 100%;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Print-Ready Converter</h1>
+  <p class="subtitle">Upload an image, set your trim size, and export a print-ready PDF with bleed and crop marks. Runs entirely in your browser — nothing is uploaded to a server.</p>
+
+  <div class="grid">
+    <div class="panel">
+      <div id="dropzone">Tap to choose an image, or drag &amp; drop one here<br><span class="muted">JPG, PNG, WEBP</span></div>
+      <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+
+      <label>Page size
+        <select id="presetSelect">
+          <option value="0">Business Card (89 x 51 mm)</option>
+          <option value="1">A4 Flyer (210 x 297 mm)</option>
+          <option value="2">A5 Flyer (148 x 210 mm)</option>
+          <option value="3">US Letter (215.9 x 279.4 mm)</option>
+          <option value="4">Postcard (152 x 102 mm)</option>
+          <option value="5" selected>Custom</option>
+        </select>
+      </label>
+
+      <div class="row">
+        <label>Trim width (mm)
+          <input id="trimW" type="number" min="1" step="0.1" value="89" />
+        </label>
+        <label>Trim height (mm)
+          <input id="trimH" type="number" min="1" step="0.1" value="51" />
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Bleed (mm)
+          <input id="bleed" type="number" min="0" step="0.5" value="3" />
+        </label>
+        <label>Target DPI
+          <input id="dpi" type="number" min="72" step="10" value="300" />
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Color mode
+          <select id="colorMode">
+            <option value="cmyk">CMYK (for offset print)</option>
+            <option value="rgb">RGB (for digital/proof)</option>
+          </select>
+        </label>
+        <div class="checkbox-row">
+          <input id="cropMarks" type="checkbox" checked />
+          <label for="cropMarks" style="margin:0;">Add crop marks</label>
+        </div>
+      </div>
+
+      <button id="convertBtn" disabled>Convert to print-ready PDF</button>
+      <div id="errorMsg" class="error" style="display:none;"></div>
+    </div>
+
+    <div class="panel">
+      <h2 style="font-size:16px; margin-top:0;">Preview &amp; Result</h2>
+      <div id="canvasWrap"><canvas id="previewCanvas" width="300" height="200"></canvas></div>
+      <div id="report" class="report" style="margin-top:10px;"></div>
+      <div id="warningsBox"></div>
+      <a id="downloadLink" class="download-btn" style="display:none;" download="print-ready.pdf">Download print-ready PDF</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const MM_TO_INCH = 1 / 25.4;
+const PT_PER_INCH = 72;
+const mmToPoints = mm => mm * MM_TO_INCH * PT_PER_INCH;
+const mmToPixels = (mm, dpi) => Math.round(mm * MM_TO_INCH * dpi);
+
+const PRESETS = [
+  { w: 89, h: 51 },
+  { w: 210, h: 297 },
+  { w: 148, h: 210 },
+  { w: 215.9, h: 279.4 },
+  { w: 152, h: 102 },
+  { w: '', h: '' }
+];
+
+let imgEl = null;
+let outputPdfBytes = null;
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const presetSelect = document.getElementById('presetSelect');
+const trimWInput = document.getElementById('trimW');
+const trimHInput = document.getElementById('trimH');
+const bleedInput = document.getElementById('bleed');
+const dpiInput = document.getElementById('dpi');
+const colorModeSelect = document.getElementById('colorMode');
+const cropMarksInput = document.getElementById('cropMarks');
+const convertBtn = document.getElementById('convertBtn');
+const errorMsg = document.getElementById('errorMsg');
+const canvas = document.getElementById('previewCanvas');
+const reportDiv = document.getElementById('report');
+const warningsBox = document.getElementById('warningsBox');
+const downloadLink = document.getElementById('downloadLink');
+
+dropzone.addEventListener('click', () => fileInput.click());
+dropzone.addEventListener('dragover', e => e.preventDefault());
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+function loadFile(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    imgEl = img;
+    dropzone.innerHTML = '';
+    dropzone.appendChild(img.cloneNode());
+    convertBtn.disabled = false;
+    downloadLink.style.display = 'none';
+    errorMsg.style.display = 'none';
+    drawPreview();
+  };
+  img.src = url;
+}
+
+presetSelect.addEventListener('change', () => {
+  const p = PRESETS[parseInt(presetSelect.value, 10)];
+  if (p.w !== '') {
+    trimWInput.value = p.w;
+    trimHInput.value = p.h;
+  }
+});
+[trimWInput, trimHInput].forEach(el => el.addEventListener('input', () => {
+  presetSelect.value = '5';
+  drawPreview();
+}));
+[bleedInput, dpiInput, colorModeSelect, cropMarksInput].forEach(el =>
+  el.addEventListener('input', drawPreview)
+);
+
+function getParams() {
+  return {
+    trimWidthMm: parseFloat(trimWInput.value) || 0,
+    trimHeightMm: parseFloat(trimHInput.value) || 0,
+    bleedMm: parseFloat(bleedInput.value) || 0,
+    targetDpi: parseInt(dpiInput.value, 10) || 300,
+    colorMode: colorModeSelect.value,
+    addCropMarks: cropMarksInput.checked
+  };
+}
+
+// On-screen only: canvas can't do true CMYK, this filter just approximates
+// the look so you're not surprised by the final color mode.
+function applyPreviewFilter(ctx, colorMode) {
+  ctx.filter = colorMode === 'cmyk' ? 'saturate(0.82) contrast(1.04) brightness(0.97)' : 'none';
+}
+
+function drawPreview() {
+  const { trimWidthMm, trimHeightMm, bleedMm, targetDpi, colorMode, addCropMarks } = getParams();
+  if (!trimWidthMm || !trimHeightMm) return;
+
+  const outWmm = trimWidthMm + bleedMm * 2;
+  const outHmm = trimHeightMm + bleedMm * 2;
+  const maxPreviewPx = window.innerWidth < 720 ? 300 : 480;
+  const screenScale = Math.min(maxPreviewPx / outWmm, maxPreviewPx / outHmm, 6);
+  const cw = Math.round(outWmm * screenScale);
+  const ch = Math.round(outHmm * screenScale);
+  canvas.width = cw;
+  canvas.height = ch;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, cw, ch);
+
+  const warnings = [];
+
+  if (imgEl) {
+    const scale = Math.max(cw / imgEl.width, ch / imgEl.height);
+    const dw = imgEl.width * scale, dh = imgEl.height * scale;
+    const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+    applyPreviewFilter(ctx, colorMode);
+    ctx.drawImage(imgEl, dx, dy, dw, dh);
+    ctx.filter = 'none';
+
+    const effDpiW = imgEl.width / (outWmm * MM_TO_INCH);
+    const effDpiH = imgEl.height / (outHmm * MM_TO_INCH);
+    const sourceDpi = Math.round(Math.min(effDpiW, effDpiH));
+
+    if (sourceDpi < targetDpi) {
+      warnings.push(`Source image resolves to about ${sourceDpi} DPI at this size (target ${targetDpi} DPI) — it will be upscaled and may look soft when printed.`);
+    }
+    if (colorMode === 'cmyk') {
+      warnings.push(`Browsers can't do true CMYK separation — this exports as RGB with a CMYK-safe adjustment. For press-critical color, convert with an ICC profile in dedicated prepress software.`);
+    }
+
+    reportDiv.innerHTML = `<p>Output size: ${outWmm.toFixed(1)} × ${outHmm.toFixed(1)} mm (trim ${trimWidthMm} × ${trimHeightMm} mm + ${bleedMm}mm bleed)</p>
+      <p>Estimated source resolution: ~${sourceDpi} DPI (target ${targetDpi})</p>`;
+  } else {
+    ctx.fillStyle = '#c7cbd1';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Upload an image to preview', cw / 2, ch / 2);
+    reportDiv.innerHTML = '';
+  }
+
+  if (addCropMarks) {
+    const bleedPx = bleedMm * screenScale;
+    const mark = 5 * screenScale, gap = 2 * screenScale;
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    const left = bleedPx, right = cw - bleedPx, top = bleedPx, bottom = ch - bleedPx;
+    [
+      { x: left, y: top, dx: -1, dy: -1 },
+      { x: right, y: top, dx: 1, dy: -1 },
+      { x: left, y: bottom, dx: -1, dy: 1 },
+      { x: right, y: bottom, dx: 1, dy: 1 }
+    ].forEach(c => {
+      ctx.beginPath();
+      ctx.moveTo(c.x + c.dx * gap, c.y);
+      ctx.lineTo(c.x + c.dx * (gap + mark), c.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(c.x, c.y + c.dy * gap);
+      ctx.lineTo(c.x, c.y + c.dy * (gap + mark));
+      ctx.stroke();
+    });
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.strokeRect(left, top, right - left, bottom - top);
+    ctx.setLineDash([]);
+  }
+
+  warningsBox.innerHTML = warnings.length
+    ? `<div class="warnings"><strong>Preflight notes</strong><ul>${warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`
+    : '';
+}
+
+async function buildFullResImage(params) {
+  const { trimWidthMm, trimHeightMm, bleedMm, targetDpi, colorMode } = params;
+  const outWpx = mmToPixels(trimWidthMm + bleedMm * 2, targetDpi);
+  const outHpx = mmToPixels(trimHeightMm + bleedMm * 2, targetDpi);
+
+  const off = document.createElement('canvas');
+  off.width = outWpx;
+  off.height = outHpx;
+  const ctx = off.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, outWpx, outHpx);
+
+  const scale = Math.max(outWpx / imgEl.width, outHpx / imgEl.height);
+  const dw = imgEl.width * scale, dh = imgEl.height * scale;
+  const dx = (outWpx - dw) / 2, dy = (outHpx - dh) / 2;
+  applyPreviewFilter(ctx, colorMode);
+  ctx.drawImage(imgEl, dx, dy, dw, dh);
+  ctx.filter = 'none';
+
+  return new Promise(resolve => {
+    off.toBlob(blob => {
+      blob.arrayBuffer().then(resolve);
+    }, 'image/jpeg', 0.95);
+  });
+}
+
+async function buildPrintPdf(imageBytes, params) {
+  const { trimWidthMm, trimHeightMm, bleedMm, addCropMarks } = params;
+  const { PDFDocument, rgb } = PDFLib;
+  const pdfDoc = await PDFDocument.create();
+
+  const pageWidthPt = mmToPoints(trimWidthMm + bleedMm * 2);
+  const pageHeightPt = mmToPoints(trimHeightMm + bleedMm * 2);
+  const bleedPt = mmToPoints(bleedMm);
+
+  const page = pdfDoc.addPage([pageWidthPt, pageHeightPt]);
+  const embeddedImage = await pdfDoc.embedJpg(imageBytes);
+  page.drawImage(embeddedImage, { x: 0, y: 0, width: pageWidthPt, height: pageHeightPt });
+
+  if (addCropMarks) {
+    const markLength = mmToPoints(5), gap = mmToPoints(2), lineWidth = 0.5, color = rgb(0, 0, 0);
+    const left = bleedPt, right = pageWidthPt - bleedPt, bottom = bleedPt, top = pageHeightPt - bleedPt;
+    const corners = [
+      { x: left, y: top, dx: -1, dy: 1 },
+      { x: right, y: top, dx: 1, dy: 1 },
+      { x: left, y: bottom, dx: -1, dy: -1 },
+      { x: right, y: bottom, dx: 1, dy: -1 }
+    ];
+    corners.forEach(c => {
+      page.drawLine({ start: { x: c.x + c.dx * gap, y: c.y }, end: { x: c.x + c.dx * (gap + markLength), y: c.y }, thickness: lineWidth, color });
+      page.drawLine({ start: { x: c.x, y: c.y + c.dy * gap }, end: { x: c.x, y: c.y + c.dy * (gap + markLength) }, thickness: lineWidth, color });
+    });
+  }
+
+  return pdfDoc.save();
+}
+
+convertBtn.addEventListener('click', async () => {
+  errorMsg.style.display = 'none';
+  downloadLink.style.display = 'none';
+  const params = getParams();
+
+  if (!imgEl) { showError('Choose an image first.'); return; }
+  if (!params.trimWidthMm || !params.trimHeightMm) { showError('Trim width and height must be greater than 0.'); return; }
+
+  convertBtn.disabled = true;
+  convertBtn.textContent = 'Converting…';
+  try {
+    const imageBytes = await buildFullResImage(params);
+    const pdfBytes = await buildPrintPdf(imageBytes, params);
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    downloadLink.href = url;
+    downloadLink.style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    showError('Conversion failed: ' + err.message);
+  } finally {
+    convertBtn.disabled = false;
+    convertBtn.textContent = 'Convert to print-ready PDF';
+  }
+});
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.style.display = 'block';
+}
+
+window.addEventListener('resize', drawPreview);
+drawPreview();
+</script>
+</body>
+</html>
