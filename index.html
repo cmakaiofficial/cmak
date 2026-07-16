@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Print-Ready Converter</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+ <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBZKrLDSbbJcALCqHi8aeCUtzCL6nyRRdI",
+  authDomain: "print-redy.firebaseapp.com",
+  projectId: "print-redy",
+  storageBucket: "print-redy.firebasestorage.app",
+  messagingSenderId: "346936372336",
+  appId: "1:346936372336:web:bbe7afada01467bda558b5",
+  measurementId: "G-ZCN31042DK"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+ </script>
 <style>
   * { box-sizing: border-box; }
   body {
