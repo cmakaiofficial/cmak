@@ -436,15 +436,43 @@ drawPreview();
   <button id="loginBtn">Sign In</button>
  </div>
 
+
 <script>
-document.getElementById("loginBtn").onclick=function(){
- document.getElementById("loginModal").style.display="block";
+document.getElementById("loginBtn").onclick = function () {
+    document.getElementById("loginModal").style.display = "block";
 };
 
-document.getElementById("signupBtn").onclick=function(){
- document.getElementById("loginModal").style.display="block";
+document.getElementById("signupBtn").onclick = function () {
+    document.getElementById("loginModal").style.display = "block";
 };
- </script>
+
+document.getElementById("signupUser").onclick = async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        await window.createUserWithEmailAndPassword(window.auth, email, password);
+        alert("Account Created Successfully");
+        document.getElementById("loginModal").style.display = "none";
+    } catch (e) {
+        alert(e.message);
+    }
+};
+
+document.getElementById("loginUser").onclick = async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        await window.signInWithEmailAndPassword(window.auth, email, password);
+        alert("Login Successful");
+        document.getElementById("loginModal").style.display = "none";
+    } catch (e) {
+        alert(e.message);
+    }
+};
+</script>
+ 
  
 </body>
 </html>
