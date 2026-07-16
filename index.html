@@ -407,6 +407,34 @@ function showError(msg) {
 window.addEventListener('resize', drawPreview);
 drawPreview();
 </script>
+ <div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000099;z-index:9999;">
+  <div style="background:#fff;width:90%;max-width:350px;margin:80px auto;padding:20px;border-radius:10px;">
+    <h2>Login</h2>
+
+    <input id="email" type="email" placeholder="Email"
+      style="width:100%;padding:10px;margin:8px 0;">
+
+    <input id="password" type="password" placeholder="Password"
+      style="width:100%;padding:10px;margin:8px 0;">
+
+    <button id="loginUser" style="width:100%;padding:10px;">Login</button>
+
+    <button id="signupUser" style="width:100%;padding:10px;margin-top:10px;">Create Account</button>
+
+    <button onclick="document.getElementById('loginModal').style.display='none'"
+      style="width:100%;padding:10px;margin-top:10px;">Close</button>
+  </div>
+</div>
+
+<script>
+document.getElementById("loginBtn").onclick=function(){
+ document.getElementById("loginModal").style.display="block";
+};
+
+document.getElementById("signupBtn").onclick=function(){
+ document.getElementById("loginModal").style.display="block";
+};
+ </script>
  <div id="authBox">
   <button id="signupBtn">Sign Up</button>
   <button id="loginBtn">Sign In</button>
