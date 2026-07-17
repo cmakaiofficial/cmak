@@ -3,18 +3,32 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>Print-Ready Converter</title>
+<title>Cmak — Print-Ready Converter</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
- <script type="module">
+<script type="module">
+/* =========================================================================
+   FIREBASE BOOTSTRAP
+   Auth (email/password) + Firestore (per-user usage/plan tracking).
+   Everything the plain <script> below needs is exposed on
+   window.CmakFirebase so this stays a single static file.
+   ========================================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-
 import {
   getAuth,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  increment,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBZKrLDSbbJcALCqHi8aeCUtzCL6nyRRdI",
@@ -29,7 +43,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
- </script>
+
+// Bridge into the page's plain (non-module) script.
+window.CmakFirebase = {
+  auth, db,
+  doc, getDoc, setDoc, updateDoc, increment, serverTimestamp,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut
+};
+
+onAuthStateChanged(auth, (user) => {
+  window.dispatchEvent(new CustomEvent('cmak-auth-changed', { detail: { user } }));
+});
+</script>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -37,11 +62,48 @@ const db = getFirestore(app);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #0f1115;
     color: #e6e8ec;
-    padding: 16px 12px 40px;
+    padding: 0 0 40px;
   }
-  .app { max-width: 920px; margin: 0 auto; }
-  h1 { font-size: 22px; margin-bottom: 4px; }
-  .subtitle { color: #9aa1ac; margin-top: 0; font-size: 13px; }
+  .app { max-width: 920px; margin: 0 auto; padding: 0 12px; }
+
+  /* ---------- Header ---------- */
+  .topbar {
+    background: #12141b;
+    border-bottom: 1px solid #22262f;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: linear-gradient(135deg, #4f7cff, #34c77b);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; color: #0a0b0e; flex-shrink: 0;
+  }
+  .brand-name { font-weight: 700; font-size: 16px; letter-spacing: 0.2px; }
+  .auth-area { display: flex; align-items: center; gap: 8px; font-size: 12.5px; flex-wrap: wrap; justify-content: flex-end; }
+  .usage-badge {
+    background: #1c2029; border: 1px solid #2d3340; border-radius: 999px;
+    padding: 5px 10px; color: #b7bcc6; white-space: nowrap;
+  }
+  .usage-badge.pro { color: #34c77b; border-color: #234a34; }
+  .usage-badge.empty { color: #f2a154; border-color: #4a3520; }
+  .btn-ghost {
+    background: transparent; border: 1px solid #2d3340; color: #e6e8ec;
+    border-radius: 7px; padding: 7px 12px; font-size: 13px; cursor: pointer;
+  }
+  .btn-ghost:hover { border-color: #4f7cff; }
+
+  .hero { padding: 22px 4px 6px; }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  .subtitle { color: #9aa1ac; margin: 0; font-size: 13px; line-height: 1.5; }
+
   .grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
   @media (min-width: 720px) {
     .grid { grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
@@ -50,7 +112,7 @@ const db = getFirestore(app);
   @media (min-width: 720px) { .panel { padding: 20px; } }
   label { display: block; font-size: 13px; color: #b7bcc6; margin-bottom: 14px; }
   input, select, button { font-family: inherit; }
-  input[type="number"], select {
+  input[type="number"], select, input[type="email"], input[type="password"] {
     display: block; width: 100%; margin-top: 6px;
     background: #0f1115; color: #e6e8ec; border: 1px solid #2d3340;
     border-radius: 8px; padding: 10px 8px; font-size: 16px;
@@ -69,6 +131,7 @@ const db = getFirestore(app);
     background: #4f7cff; color: white; font-size: 15px; font-weight: 600; cursor: pointer;
   }
   button#convertBtn:disabled { background: #34394a; cursor: not-allowed; }
+  .limit-note { font-size: 12px; color: #7d8492; margin-top: 8px; text-align: center; }
   .error { color: #ff6b6b; font-size: 13px; margin-top: 10px; }
   .muted { color: #6b7280; font-size: 12px; }
   #canvasWrap { display: flex; justify-content: center; background: #0a0b0e; border-radius: 8px; padding: 12px; }
@@ -84,12 +147,94 @@ const db = getFirestore(app);
     background: #34c77b; color: #08120c; font-weight: 600; text-decoration: none;
     border-radius: 8px; text-align: center; width: 100%;
   }
+  footer.pagefoot {
+    text-align: center; color: #545b68; font-size: 12px; margin-top: 30px;
+  }
+
+  /* ---------- Modals (shared) ---------- */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(6,7,10,0.78);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; z-index: 100;
+  }
+  .modal {
+    position: relative;
+    background: #171a21; border: 1px solid #262b35; border-radius: 14px;
+    width: 100%; max-width: 380px; padding: 24px 22px;
+  }
+  .modal h2 { margin: 0 0 4px; font-size: 18px; text-align: center; }
+  .modal p.modal-sub { color: #9aa1ac; font-size: 13px; margin: 0 0 16px; text-align: center; line-height: 1.5; }
+  .modal .error { min-height: 16px; }
+  .btn-primary {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: #4f7cff; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;
+  }
+  .btn-primary:disabled { background: #34394a; cursor: not-allowed; }
+  .btn-secondary {
+    width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #2d3340; border-radius: 8px;
+    background: transparent; color: #e6e8ec; font-weight: 600; font-size: 14px; cursor: pointer;
+  }
+  .btn-pro {
+    background: linear-gradient(135deg, #f2a154, #f2d477); color: #241a06; border: none;
+  }
+  .modal-close {
+    width: 100%; padding: 10px; margin-top: 10px; border: none; background: transparent;
+    color: #7d8492; font-size: 13px; cursor: pointer;
+  }
+  .modal-close-x {
+    position: absolute; top: 14px; right: 16px; background: none; border: none;
+    color: #7d8492; font-size: 18px; cursor: pointer; line-height: 1;
+  }
+  .auth-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .auth-tab {
+    flex: 1; padding: 8px; text-align: center; border-radius: 7px; font-size: 13px;
+    border: 1px solid #2d3340; color: #b7bcc6; cursor: pointer; background: transparent;
+  }
+  .auth-tab.active { background: #4f7cff; border-color: #4f7cff; color: #fff; }
+
+  /* ---------- Rewarded-ad gate modal ---------- */
+  .ad-illustration {
+    width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 16px;
+    background: linear-gradient(135deg, #1c2029, #262b35);
+    border: 1px solid #2d3340;
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+  }
+  .ad-gate-buttons { margin-top: 4px; }
+  .ad-loading { text-align: center; padding: 6px 0 2px; }
+  .ad-spinner {
+    width: 34px; height: 34px; margin: 0 auto 12px;
+    border: 3px solid #2d3340; border-top-color: #4f7cff; border-radius: 50%;
+    animation: cmak-spin 0.8s linear infinite;
+  }
+  @keyframes cmak-spin { to { transform: rotate(360deg); } }
+  .ad-loading-text { font-size: 13px; color: #9aa1ac; margin: 0; }
+  .ad-progress-track {
+    width: 100%; height: 5px; background: #262b35; border-radius: 999px; overflow: hidden; margin-top: 10px;
+  }
+  .ad-progress-fill {
+    height: 100%; width: 0%; background: #4f7cff; transition: width 0.2s linear;
+  }
 </style>
 </head>
 <body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">C</div>
+    <div class="brand-name">Cmak</div>
+  </div>
+  <div class="auth-area">
+    <span id="usageBadge" class="usage-badge">Sign in to convert</span>
+    <button id="signInTopBtn" class="btn-ghost">Sign in</button>
+    <button id="signOutTopBtn" class="btn-ghost" style="display:none;">Sign out</button>
+  </div>
+</div>
+
 <div class="app">
-  <h1>Print-Ready Converter</h1>
-  <p class="subtitle">Upload an image, set your trim size, and export a print-ready PDF with bleed and crop marks. Runs entirely in your browser — nothing is uploaded to a server.</p>
+  <div class="hero">
+    <h1>Print-Ready Converter</h1>
+    <p class="subtitle">Upload an image, set your trim size, and export a print-ready PDF with bleed and crop marks. Conversion runs entirely in your browser — nothing is uploaded to a server.</p>
+  </div>
 
   <div class="grid">
     <div class="panel">
@@ -139,6 +284,7 @@ const db = getFirestore(app);
       </div>
 
       <button id="convertBtn" disabled>Convert to print-ready PDF</button>
+      <div id="limitNote" class="limit-note"></div>
       <div id="errorMsg" class="error" style="display:none;"></div>
     </div>
 
@@ -150,13 +296,73 @@ const db = getFirestore(app);
       <a id="downloadLink" class="download-btn" style="display:none;" download="print-ready.pdf">Download print-ready PDF</a>
     </div>
   </div>
+
+  <footer class="pagefoot">Cmak · Print-ready PDFs, made in your browser.</footer>
+</div>
+
+<!-- ================= Auth modal ================= -->
+<div id="authModal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <button class="modal-close-x" id="authCloseX">&times;</button>
+    <h2 id="authHeading">Welcome to Cmak</h2>
+    <p class="modal-sub" id="authSub">Sign in to start converting print-ready PDFs.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">Sign in</button>
+      <button class="auth-tab" id="tabSignup">Create account</button>
+    </div>
+    <input id="email" type="email" placeholder="Email address" autocomplete="email" />
+    <div style="height:10px;"></div>
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+    <div id="authError" class="error" style="display:none;"></div>
+    <div style="height:12px;"></div>
+    <button id="authSubmitBtn" class="btn-primary">Sign in</button>
+    <button class="modal-close" id="authCancelBtn">Not now</button>
+  </div>
+</div>
+
+<!-- ================= Rewarded-ad gate modal ================= -->
+<div id="adGateModal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <button class="modal-close-x" id="adGateCloseX">&times;</button>
+
+    <div id="adGateIdle">
+      <div class="ad-illustration">▶</div>
+      <h2>You're out of free conversions</h2>
+      <p class="modal-sub">Watch one short ad to unlock another conversion, or go Pro for unlimited, ad-free exports.</p>
+      <div class="ad-gate-buttons">
+        <button id="watchAdBtn" class="btn-primary">Watch Ad to Continue</button>
+        <button id="upgradeProBtn" class="btn-secondary btn-pro">Upgrade to Pro</button>
+      </div>
+    </div>
+
+    <div id="adGateLoading" style="display:none;">
+      <div class="ad-loading">
+        <div class="ad-spinner"></div>
+        <p class="ad-loading-text">Playing rewarded ad… <span id="adCountdown">5</span>s</p>
+        <div class="ad-progress-track"><div id="adProgressFill" class="ad-progress-fill"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Upgrade-to-Pro modal ================= -->
+<div id="upgradeModal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <button class="modal-close-x" id="upgradeCloseX">&times;</button>
+    <h2>Upgrade to Cmak Pro</h2>
+    <p class="modal-sub">Unlimited conversions, zero ads. Wire this button to Stripe / Play Billing / your payment provider — grant "pro" only after the webhook confirms payment.</p>
+    <button id="confirmUpgradeBtn" class="btn-primary btn-pro">Simulate Pro Upgrade (Demo)</button>
+    <button class="modal-close" id="upgradeCancelBtn">Not now</button>
+  </div>
 </div>
 
 <script>
+/* =========================================================================
+   CONSTANTS
+   ========================================================================= */
 const MM_TO_INCH = 1 / 25.4;
 const PT_PER_INCH = 72;
-const mmToPoints = mm => mm * MM_TO_INCH * PT_PER_INCH;
-const mmToPixels = (mm, dpi) => Math.round(mm * MM_TO_INCH * dpi);
+const FREE_LIMIT = 5;
 
 const PRESETS = [
   { w: 89, h: 51 },
@@ -167,8 +373,13 @@ const PRESETS = [
   { w: '', h: '' }
 ];
 
+const mmToPoints = mm => mm * MM_TO_INCH * PT_PER_INCH;
+const mmToPixels = (mm, dpi) => Math.round(mm * MM_TO_INCH * dpi);
+
+/* =========================================================================
+   DOM REFERENCES
+   ========================================================================= */
 let imgEl = null;
-let outputPdfBytes = null;
 
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -185,7 +396,268 @@ const canvas = document.getElementById('previewCanvas');
 const reportDiv = document.getElementById('report');
 const warningsBox = document.getElementById('warningsBox');
 const downloadLink = document.getElementById('downloadLink');
+const limitNote = document.getElementById('limitNote');
+const usageBadge = document.getElementById('usageBadge');
+const signInTopBtn = document.getElementById('signInTopBtn');
+const signOutTopBtn = document.getElementById('signOutTopBtn');
 
+/* =========================================================================
+   MODULE: Auth state + Firestore-backed user record
+   { uid, email, plan: 'free' | 'pro', usage, createdAt, lastConversion }
+   ========================================================================= */
+let currentUser = null;
+let userDoc = null;
+
+function fb() { return window.CmakFirebase; }
+
+async function ensureUserDoc(user) {
+  const { db, doc, getDoc, setDoc, serverTimestamp } = fb();
+  const ref = doc(db, 'users', user.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    userDoc = snap.data();
+  } else {
+    userDoc = {
+      email: user.email,
+      plan: 'free',
+      usage: 0,
+      createdAt: serverTimestamp(),
+      lastConversion: null
+    };
+    await setDoc(ref, userDoc);
+  }
+}
+
+async function incrementUsage() {
+  const { db, doc, updateDoc, increment, serverTimestamp } = fb();
+  const ref = doc(db, 'users', currentUser.uid);
+  await updateDoc(ref, { usage: increment(1), lastConversion: serverTimestamp() });
+  userDoc.usage = (userDoc.usage || 0) + 1;
+  updateUsageUI();
+}
+
+async function setUserPlan(plan) {
+  const { db, doc, updateDoc } = fb();
+  const ref = doc(db, 'users', currentUser.uid);
+  await updateDoc(ref, { plan });
+  userDoc.plan = plan;
+  updateUsageUI();
+}
+
+window.addEventListener('cmak-auth-changed', async (e) => {
+  currentUser = e.detail.user;
+  signInTopBtn.style.display = currentUser ? 'none' : 'inline-block';
+  signOutTopBtn.style.display = currentUser ? 'inline-block' : 'none';
+
+  if (currentUser) {
+    try {
+      await ensureUserDoc(currentUser);
+    } catch (err) {
+      console.error('Failed to load user record:', err);
+    }
+  } else {
+    userDoc = null;
+  }
+  updateUsageUI();
+});
+
+function updateUsageUI() {
+  usageBadge.classList.remove('pro', 'empty');
+
+  if (!currentUser) {
+    usageBadge.textContent = 'Sign in to convert';
+    limitNote.textContent = 'Sign in (it\u2019s free) to get 5 free conversions.';
+    return;
+  }
+  if (!userDoc) {
+    usageBadge.textContent = 'Loading…';
+    limitNote.textContent = '';
+    return;
+  }
+  if (userDoc.plan === 'pro') {
+    usageBadge.textContent = 'Pro · Unlimited';
+    usageBadge.classList.add('pro');
+    limitNote.textContent = '';
+    return;
+  }
+
+  const remaining = Math.max(0, FREE_LIMIT - (userDoc.usage || 0));
+  usageBadge.textContent = remaining + ' free conversion' + (remaining === 1 ? '' : 's') + ' left';
+  if (remaining === 0) {
+    usageBadge.classList.add('empty');
+    limitNote.textContent = 'Free limit reached — watch an ad or go Pro to keep converting';
+  } else {
+    limitNote.textContent = `${remaining} of ${FREE_LIMIT} free conversions remaining`;
+  }
+}
+updateUsageUI();
+
+/* =========================================================================
+   MODULE: Auth modal (sign in / sign up)
+   ========================================================================= */
+const authModal = document.getElementById('authModal');
+const authHeading = document.getElementById('authHeading');
+const authSub = document.getElementById('authSub');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authError = document.getElementById('authError');
+const tabLogin = document.getElementById('tabLogin');
+const tabSignup = document.getElementById('tabSignup');
+let authMode = 'login';
+
+function openAuthModal(reason) {
+  authError.style.display = 'none';
+  setAuthMode('login');
+  if (reason === 'limit') {
+    authSub.textContent = `You've used your ${FREE_LIMIT} free conversions. Sign in or create a free account to keep going.`;
+  } else if (reason === 'required') {
+    authSub.textContent = 'Sign in to start converting print-ready PDFs.';
+  } else {
+    authSub.textContent = 'Sign in for unlimited print-ready conversions.';
+  }
+  authModal.style.display = 'flex';
+}
+function closeAuthModal() { authModal.style.display = 'none'; }
+
+function setAuthMode(mode) {
+  authMode = mode;
+  tabLogin.classList.toggle('active', mode === 'login');
+  tabSignup.classList.toggle('active', mode === 'signup');
+  authHeading.textContent = mode === 'login' ? 'Welcome back' : 'Create your account';
+  authSubmitBtn.textContent = mode === 'login' ? 'Sign in' : 'Create account';
+  document.getElementById('password').setAttribute('autocomplete', mode === 'login' ? 'current-password' : 'new-password');
+}
+tabLogin.addEventListener('click', () => setAuthMode('login'));
+tabSignup.addEventListener('click', () => setAuthMode('signup'));
+document.getElementById('authCloseX').addEventListener('click', closeAuthModal);
+document.getElementById('authCancelBtn').addEventListener('click', closeAuthModal);
+signInTopBtn.addEventListener('click', () => openAuthModal('manual'));
+signOutTopBtn.addEventListener('click', () => fb().signOut(fb().auth));
+
+authSubmitBtn.addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  authError.style.display = 'none';
+  if (!email || !password) {
+    authError.textContent = 'Enter an email and password.';
+    authError.style.display = 'block';
+    return;
+  }
+  authSubmitBtn.disabled = true;
+  try {
+    if (authMode === 'signup') {
+      await fb().createUserWithEmailAndPassword(fb().auth, email, password);
+    } else {
+      await fb().signInWithEmailAndPassword(fb().auth, email, password);
+    }
+    closeAuthModal();
+  } catch (e) {
+    authError.textContent = e.message.replace('Firebase: ', '');
+    authError.style.display = 'block';
+  } finally {
+    authSubmitBtn.disabled = false;
+  }
+});
+
+/* =========================================================================
+   MODULE: Rewarded ad
+   Reusable hook for any rewarded-ad SDK (Google Ad Manager, Adsterra,
+   Monetag, etc). Swap the body of showRewardedAd() for a real SDK call.
+   Contract: resolve `true` only once the viewer watched the ad to
+   completion; resolve `false` if it failed, was skipped, or errored.
+   ========================================================================= */
+async function showRewardedAd() {
+  // ---- Placeholder simulation — replace with a real ad SDK call ----
+  // Example shape for a real integration:
+  //   const result = await AdSdk.loadRewardedAd({ adUnitId: '...' });
+  //   return result.status === 'completed';
+  return new Promise((resolve) => {
+    const totalMs = 5000;
+    const startedAt = Date.now();
+    const countdownEl = document.getElementById('adCountdown');
+    const fillEl = document.getElementById('adProgressFill');
+
+    const tick = () => {
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(0, Math.ceil((totalMs - elapsed) / 1000));
+      countdownEl.textContent = remaining;
+      fillEl.style.width = Math.min(100, (elapsed / totalMs) * 100) + '%';
+      if (elapsed >= totalMs) {
+        clearInterval(intervalId);
+        resolve(true);
+      }
+    };
+    const intervalId = setInterval(tick, 100);
+    tick();
+  });
+}
+
+/* =========================================================================
+   MODULE: Ad-gate modal (shown once the free quota is used up)
+   ========================================================================= */
+const adGateModal = document.getElementById('adGateModal');
+const adGateIdle = document.getElementById('adGateIdle');
+const adGateLoading = document.getElementById('adGateLoading');
+const watchAdBtn = document.getElementById('watchAdBtn');
+const upgradeProBtn = document.getElementById('upgradeProBtn');
+
+function openAdGateModal() {
+  adGateIdle.style.display = 'block';
+  adGateLoading.style.display = 'none';
+  adGateModal.style.display = 'flex';
+}
+function closeAdGateModal() {
+  adGateModal.style.display = 'none';
+}
+document.getElementById('adGateCloseX').addEventListener('click', closeAdGateModal);
+
+watchAdBtn.addEventListener('click', async () => {
+  adGateIdle.style.display = 'none';
+  adGateLoading.style.display = 'block';
+
+  const watched = await showRewardedAd();
+  closeAdGateModal();
+
+  if (watched) {
+    // Reward granted: run exactly one conversion, bypassing the quota check.
+    await runConversion(getParams());
+  } else {
+    showError('The ad was not completed. Please try again to unlock another conversion.');
+  }
+});
+
+upgradeProBtn.addEventListener('click', () => {
+  closeAdGateModal();
+  openUpgradeModal();
+});
+
+/* =========================================================================
+   MODULE: Upgrade-to-Pro modal
+   Demo-only plan switch. In production, only flip `plan` to 'pro' after
+   your payment provider's webhook confirms a successful charge.
+   ========================================================================= */
+const upgradeModal = document.getElementById('upgradeModal');
+function openUpgradeModal() { upgradeModal.style.display = 'flex'; }
+function closeUpgradeModal() { upgradeModal.style.display = 'none'; }
+document.getElementById('upgradeCloseX').addEventListener('click', closeUpgradeModal);
+document.getElementById('upgradeCancelBtn').addEventListener('click', closeUpgradeModal);
+document.getElementById('confirmUpgradeBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('confirmUpgradeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Upgrading…';
+  try {
+    await setUserPlan('pro');
+    closeUpgradeModal();
+  } catch (err) {
+    console.error('Failed to upgrade plan:', err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simulate Pro Upgrade (Demo)';
+  }
+});
+
+/* =========================================================================
+   MODULE: File & preview handling (unchanged behavior)
+   ========================================================================= */
 dropzone.addEventListener('click', () => fileInput.click());
 dropzone.addEventListener('dragover', e => e.preventDefault());
 dropzone.addEventListener('drop', e => {
@@ -322,6 +794,9 @@ function drawPreview() {
     : '';
 }
 
+/* =========================================================================
+   MODULE: PDF generation (unchanged behavior)
+   ========================================================================= */
 async function buildFullResImage(params) {
   const { trimWidthMm, trimHeightMm, bleedMm, targetDpi, colorMode } = params;
   const outWpx = mmToPixels(trimWidthMm + bleedMm * 2, targetDpi);
@@ -379,14 +854,10 @@ async function buildPrintPdf(imageBytes, params) {
   return pdfDoc.save();
 }
 
-convertBtn.addEventListener('click', async () => {
-  errorMsg.style.display = 'none';
-  downloadLink.style.display = 'none';
-  const params = getParams();
-
-  if (!imgEl) { showError('Choose an image first.'); return; }
-  if (!params.trimWidthMm || !params.trimHeightMm) { showError('Trim width and height must be greater than 0.'); return; }
-
+/* =========================================================================
+   MODULE: Conversion orchestration + monetization gate
+   ========================================================================= */
+async function runConversion(params) {
   convertBtn.disabled = true;
   convertBtn.textContent = 'Converting…';
   try {
@@ -396,6 +867,10 @@ convertBtn.addEventListener('click', async () => {
     const url = URL.createObjectURL(blob);
     downloadLink.href = url;
     downloadLink.style.display = 'block';
+
+    if (userDoc && userDoc.plan !== 'pro') {
+      await incrementUsage();
+    }
   } catch (err) {
     console.error(err);
     showError('Conversion failed: ' + err.message);
@@ -403,6 +878,35 @@ convertBtn.addEventListener('click', async () => {
     convertBtn.disabled = false;
     convertBtn.textContent = 'Convert to print-ready PDF';
   }
+}
+
+convertBtn.addEventListener('click', async () => {
+  errorMsg.style.display = 'none';
+
+  // Conversions require a signed-in account so usage tracks per user
+  // in Firestore (and survives a cleared LocalStorage).
+  if (!currentUser) {
+    openAuthModal('required');
+    return;
+  }
+  if (!userDoc) {
+    try { await ensureUserDoc(currentUser); }
+    catch (err) { showError('Could not load your account. Please try again.'); return; }
+  }
+
+  const params = getParams();
+  if (!imgEl) { showError('Choose an image first.'); return; }
+  if (!params.trimWidthMm || !params.trimHeightMm) { showError('Trim width and height must be greater than 0.'); return; }
+
+  const isPro = userDoc.plan === 'pro';
+  const quotaUsed = (userDoc.usage || 0) >= FREE_LIMIT;
+
+  if (!isPro && quotaUsed) {
+    openAdGateModal();
+    return;
+  }
+
+  await runConversion(params);
 });
 
 function showError(msg) {
@@ -413,66 +917,6 @@ function showError(msg) {
 window.addEventListener('resize', drawPreview);
 drawPreview();
 </script>
- <div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#00000099;z-index:9999;">
-  <div style="background:#fff;width:90%;max-width:350px;margin:80px auto;padding:20px;border-radius:10px;">
-    <h2>Login</h2>
-
-    <input id="email" type="email" placeholder="Email"
-      style="width:100%;padding:10px;margin:8px 0;">
-
-    <input id="password" type="password" placeholder="Password"
-      style="width:100%;padding:10px;margin:8px 0;">
-
-    <button id="loginUser" style="width:100%;padding:10px;">Login</button>
-
-    <button id="signupUser" style="width:100%;padding:10px;margin-top:10px;">Create Account</button>
-
-    <button onclick="document.getElementById('loginModal').style.display='none'"
-      style="width:100%;padding:10px;margin-top:10px;">Close</button>
-  </div>
-</div>
- <div id="authBox">
-  <button id="signupBtn">Sign Up</button>
-  <button id="loginBtn">Sign In</button>
- </div>
-
-
-<script>
-document.getElementById("loginBtn").onclick = function () {
-    document.getElementById("loginModal").style.display = "block";
-};
-
-document.getElementById("signupBtn").onclick = function () {
-    document.getElementById("loginModal").style.display = "block";
-};
-
-document.getElementById("signupUser").onclick = async function () {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-        await window.createUserWithEmailAndPassword(window.auth, email, password);
-        alert("Account Created Successfully");
-        document.getElementById("loginModal").style.display = "none";
-    } catch (e) {
-        alert(e.message);
-    }
-};
-
-document.getElementById("loginUser").onclick = async function () {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-        await window.signInWithEmailAndPassword(window.auth, email, password);
-        alert("Login Successful");
-        document.getElementById("loginModal").style.display = "none";
-    } catch (e) {
-        alert(e.message);
-    }
-};
-</script>
- 
- 
 </body>
 </html>
+
