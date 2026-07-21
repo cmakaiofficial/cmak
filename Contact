@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Us | Cmak</title>
+<meta name="description" content="Contact the Cmak team for support, feedback, or business inquiries.">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#0f1115;
+    color:#e6e8ec;
+    line-height:1.7;
+}
+
+.container{
+    max-width:800px;
+    margin:60px auto;
+    padding:30px;
+    background:#171a21;
+    border:1px solid #262b35;
+    border-radius:12px;
+}
+
+h1{
+    color:#4f7cff;
+    margin-bottom:15px;
+}
+
+p{
+    margin-bottom:18px;
+    color:#cfd5df;
+}
+
+.card{
+    background:#11141a;
+    border:1px solid #2d3340;
+    border-radius:10px;
+    padding:18px;
+    margin-top:20px;
+}
+
+.label{
+    color:#9aa1ac;
+    font-size:14px;
+    margin-bottom:5px;
+}
+
+.value{
+    font-size:17px;
+    font-weight:600;
+    color:#ffffff;
+}
+
+footer{
+    text-align:center;
+    color:#7d8492;
+    margin:40px 20px;
+    font-size:14px;
+}
+
+@media(max-width:768px){
+    .container{
+        margin:20px;
+        padding:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Contact Us</h1>
+
+<p>
+Thank you for using <strong>Cmak</strong>.
+If you have any questions, feedback, suggestions, or need technical support,
+please contact us using the information below.
+</p>
+
+<div class="card">
+<div class="label">Email</div>
+<div class="value">your@email.com</div>
+</div>
+
+<div class="card">
+<div class="label">Website</div>
+<div class="value">Cmak Print-Ready Converter</div>
+</div>
+
+<div class="card">
+<div class="label">Support</div>
+<div class="value">
+We usually reply within 24–48 hours.
+</div>
+</div>
+
+</div>
+
+<footer>
+© 2026 Cmak. All Rights Reserved.
+</footer>
+
+</body>
+</html>
