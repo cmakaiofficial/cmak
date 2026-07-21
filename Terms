@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Conditions | Cmak</title>
+<meta name="description" content="Read the Terms and Conditions for using the Cmak Print-Ready Converter.">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#0f1115;
+    color:#e6e8ec;
+    line-height:1.8;
+}
+
+.container{
+    max-width:900px;
+    margin:60px auto;
+    padding:30px;
+    background:#171a21;
+    border:1px solid #262b35;
+    border-radius:12px;
+}
+
+h1{
+    color:#4f7cff;
+    margin-bottom:20px;
+}
+
+h2{
+    color:#ffffff;
+    margin-top:25px;
+    margin-bottom:10px;
+    font-size:20px;
+}
+
+p{
+    color:#cfd5df;
+    margin-bottom:15px;
+}
+
+ul{
+    margin-left:20px;
+    color:#cfd5df;
+}
+
+li{
+    margin-bottom:10px;
+}
+
+footer{
+    text-align:center;
+    color:#7d8492;
+    margin:40px 20px;
+    font-size:14px;
+}
+
+@media(max-width:768px){
+    .container{
+        margin:20px;
+        padding:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Terms & Conditions</h1>
+
+<p>
+By accessing and using <strong>Cmak Print-Ready Converter</strong>, you agree to these Terms and Conditions.
+If you do not agree with these terms, please do not use this website.
+</p>
+
+<h2>Use of Service</h2>
+
+<p>
+Cmak provides online tools to help users create print-ready PDF files. You agree to use the service only for lawful purposes.
+</p>
+
+<h2>User Responsibility</h2>
+
+<ul>
+<li>You are responsible for the files you upload.</li>
+<li>You must own or have permission to use uploaded content.</li>
+<li>You must not upload illegal, harmful, or copyrighted material without permission.</li>
+</ul>
+
+<h2>Intellectual Property</h2>
+
+<p>
+All website content, branding, and software belong to Cmak unless otherwise stated.
+</p>
+
+<h2>Disclaimer</h2>
+
+<p>
+The service is provided "as is" without warranties of any kind. We do not guarantee error-free or uninterrupted service.
+</p>
+
+<h2>Limitation of Liability</h2>
+
+<p>
+Cmak is not responsible for any loss, damage, or printing issues resulting from the use of this website.
+</p>
+
+<h2>Changes</h2>
+
+<p>
+We may update these Terms & Conditions at any time without prior notice.
+</p>
+
+<h2>Contact</h2>
+
+<p>
+If you have any questions about these Terms & Conditions, please contact us at your@email.com.
+</p>
+
+</div>
+
+<footer>
+© 2026 Cmak. All Rights Reserved.
+</footer>
+
+</body>
+</html>
