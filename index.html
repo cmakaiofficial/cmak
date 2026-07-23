@@ -1142,6 +1142,119 @@ window.addEventListener("load",function(){
 
 });
 </script>
+     <section class="how-it-works">
+  <h2>How Cmak Works</h2>
+  <p class="subtitle">
+    Create a professional print-ready PDF in three simple steps.
+  </p>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="circle">1</div>
+      <h3>Upload Image</h3>
+      <p>Choose a JPG, PNG or WEBP image from your device. Files stay private and are processed in your browser.</p>
+    </div>
+
+    <div class="step">
+      <div class="circle">2</div>
+      <h3>Configure Print Settings</h3>
+      <p>Select trim size, bleed, DPI, color mode and crop marks for professional printing.</p>
+    </div>
+
+    <div class="step">
+      <div class="circle">3</div>
+      <h3>Download PDF</h3>
+      <p>Instantly generate a high-quality print-ready PDF with accurate bleed and crop marks.</p>
+    </div>
+
+  </div>
+</section>
+
+<style>
+.how-it-works{
+padding:80px 20px;
+background:#0f1117;
+border-top:1px solid #232938;
+}
+
+.how-it-works h2{
+font-size:34px;
+font-weight:700;
+text-align:center;
+color:#f8fafc;
+margin:0 0 12px;
+}
+
+.subtitle{
+text-align:center;
+color:#9ca3af;
+font-size:17px;
+line-height:1.7;
+max-width:650px;
+margin:0 auto 50px;
+}
+
+.steps{
+max-width:900px;
+margin:auto;
+display:flex;
+flex-direction:column;
+gap:24px;
+}
+
+.step{
+background:#171b24;
+border:1px solid #2a3140;
+border-radius:18px;
+padding:30px;
+transition:.3s;
+}
+
+.step:hover{
+border-color:#2563eb;
+box-shadow:0 0 20px rgba(37,99,235,.25);
+}
+
+.circle{
+width:70px;
+height:70px;
+margin:0 auto 20px;
+border-radius:50%;
+background:#2563eb;
+color:#fff;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:28px;
+font-weight:700;
+}
+
+.step h3{
+text-align:center;
+font-size:24px;
+color:#fff;
+margin:0 0 12px;
+}
+
+.step p{
+text-align:center;
+color:#9ca3af;
+font-size:16px;
+line-height:1.8;
+margin:0;
+}
+
+@media(min-width:768px){
+.steps{
+flex-direction:row;
+}
+.step{
+flex:1;
+}
+}
+</style>
+     
 <!-- End Splash Screen -->
 </body>
 </html>
