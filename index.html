@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Cmak — Print-Ready Converter</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
 <!-- Google AdSense -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9832667277256384"
      crossorigin="anonymous"></script>
@@ -61,20 +65,44 @@ onAuthStateChanged(auth, (user) => {
 });
 </script>
 <style>
+  :root {
+    --ink: #0d0f12;
+    --panel: #15181d;
+    --panel-2: #1a1e24;
+    --line: #262b33;
+    --paper: #edf0f2;
+    --dim: #9aa1ab;
+    --faint: #666e79;
+    --cyan: #00b4d8;
+    --cyan-dim: #0a3a47;
+    --magenta: #e8368f;
+    --yellow: #f2c14e;
+    --green: #2ecc71;
+    --font-display: 'Space Grotesk', 'Inter', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0f1115;
-    color: #e6e8ec;
+    font-family: var(--font-body);
+    background: var(--ink);
+    color: var(--paper);
     padding: 0 0 40px;
   }
   .app { max-width: 920px; margin: 0 auto; padding: 0 12px; }
 
+  /* ---------- Color bar (signature motif — a printer's calibration strip) ---------- */
+  .colorbar { display: flex; height: 4px; width: 100%; }
+  .colorbar span { flex: 1; }
+  .colorbar .c { background: var(--cyan); }
+  .colorbar .m { background: var(--magenta); }
+  .colorbar .y { background: var(--yellow); }
+  .colorbar .k { background: var(--paper); }
+
   /* ---------- Responsive nav ---------- */
   .topnav {
-    background: #12141b;
-    border-bottom: 1px solid #22262f;
+    background: var(--panel);
     position: sticky;
     top: 0;
     z-index: 30;
@@ -82,7 +110,7 @@ onAuthStateChanged(auth, (user) => {
   .topnav-inner {
     max-width: 920px;
     margin: 0 auto;
-    padding: 10px 16px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -92,7 +120,7 @@ onAuthStateChanged(auth, (user) => {
     order: 2;
     margin-left: auto;
     background: transparent;
-    border: 1px solid #2d3340;
+    border: 1px solid var(--line);
     border-radius: 7px;
     width: 38px;
     height: 34px;
@@ -106,7 +134,7 @@ onAuthStateChanged(auth, (user) => {
     display: block;
     width: 18px;
     height: 2px;
-    background: #e6e8ec;
+    background: var(--paper);
     border-radius: 2px;
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
@@ -117,17 +145,18 @@ onAuthStateChanged(auth, (user) => {
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 18px;
     order: 1;
   }
   .nav-links a {
-    color: #e6e8ec;
+    color: var(--dim);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 13.5px;
     white-space: nowrap;
+    transition: color 0.15s ease;
   }
-  .nav-links a:hover { color: #4f7cff; }
+  .nav-links a:hover { color: var(--cyan); }
 
   .auth-area { order: 3; margin-left: auto; }
 
@@ -149,145 +178,236 @@ onAuthStateChanged(auth, (user) => {
     .nav-links a {
       width: 100%;
       padding: 10px 4px;
-      border-top: 1px solid #22262f;
+      border-top: 1px solid var(--line);
     }
   }
 
-  /* ---------- Header ---------- */
-  .brand { display: flex; align-items: center; gap: 9px; }
+  /* ---------- Brand ---------- */
+  .brand { display: flex; align-items: center; gap: 10px; }
   .brand-mark {
-    width: 30px; height: 30px; border-radius: 8px;
-    background: linear-gradient(135deg, #4f7cff, #34c77b);
+    width: 30px; height: 30px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 15px; color: #0a0b0e; flex-shrink: 0;
   }
-  .brand-name { font-weight: 700; font-size: 16px; letter-spacing: 0.2px; }
+  .brand-mark svg { width: 100%; height: 100%; display: block; }
+  .brand-name {
+    font-family: var(--font-display);
+    font-weight: 700; font-size: 17px; letter-spacing: 0.2px;
+  }
+
   .auth-area { display: flex; align-items: center; gap: 8px; font-size: 12.5px; flex-wrap: wrap; justify-content: flex-end; }
   .usage-badge {
-    background: #1c2029; border: 1px solid #2d3340; border-radius: 999px;
-    padding: 5px 10px; color: #b7bcc6; white-space: nowrap;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px;
+    padding: 5px 10px; color: var(--dim); white-space: nowrap;
+    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.2px;
   }
-  .usage-badge.pro { color: #34c77b; border-color: #234a34; }
-  .usage-badge.empty { color: #f2a154; border-color: #4a3520; }
+  .usage-badge.pro { color: var(--green); border-color: #1d3d2b; }
+  .usage-badge.empty { color: var(--yellow); border-color: #4a3d1c; }
   .btn-ghost {
-    background: transparent; border: 1px solid #2d3340; color: #e6e8ec;
-    border-radius: 7px; padding: 7px 12px; font-size: 13px; cursor: pointer;
+    background: transparent; border: 1px solid var(--line); color: var(--paper);
+    border-radius: 7px; padding: 7px 12px; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: border-color 0.15s ease;
   }
-  .btn-ghost:hover { border-color: #4f7cff; }
+  .btn-ghost:hover { border-color: var(--cyan); }
 
-  .hero { padding: 22px 4px 6px; }
-  h1 { font-size: 21px; margin: 0 0 4px; }
-  .subtitle { color: #9aa1ac; margin: 0; font-size: 13px; line-height: 1.5; }
+  .hero { padding: 30px 4px 6px; }
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cyan); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: 25px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.2px;
+  }
+  .hero .subtitle { color: var(--dim); margin: 0; font-size: 13.5px; line-height: 1.6; max-width: 58ch; }
 
-  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 24px; }
   @media (min-width: 720px) {
     .grid { grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
   }
-  .panel { background: #171a21; border: 1px solid #262b35; border-radius: 12px; padding: 16px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
   @media (min-width: 720px) { .panel { padding: 20px; } }
-  label { display: block; font-size: 13px; color: #b7bcc6; margin-bottom: 14px; }
+  .panel-heading {
+    font-family: var(--font-display); font-size: 15px; font-weight: 600; margin: 0 0 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-heading .tag {
+    font-family: var(--font-mono); font-size: 10px; color: var(--faint);
+    border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; font-weight: 400;
+  }
+  label { display: block; font-size: 12.5px; color: var(--dim); margin-bottom: 14px; font-weight: 500; }
   input, select, button { font-family: inherit; }
   input[type="number"], select, input[type="email"], input[type="password"] {
     display: block; width: 100%; margin-top: 6px;
-    background: #0f1115; color: #e6e8ec; border: 1px solid #2d3340;
-    border-radius: 8px; padding: 10px 8px; font-size: 16px;
+    background: var(--ink); color: var(--paper); border: 1px solid var(--line);
+    border-radius: 7px; padding: 10px 8px; font-size: 15px;
+    font-family: var(--font-mono);
+  }
+  select { font-family: var(--font-body); }
+  input:focus, select:focus {
+    outline: none; border-color: var(--cyan);
+    box-shadow: 0 0 0 3px var(--cyan-dim);
   }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 20px; }
-  .checkbox-row input { width: auto; margin: 0; }
+  .checkbox-row input { width: auto; margin: 0; accent-color: var(--cyan); }
   #dropzone {
-    border: 2px dashed #2d3340; border-radius: 10px; padding: 20px; text-align: center;
-    cursor: pointer; margin-bottom: 16px; color: #9aa1ac; min-height: 110px;
-    display: flex; align-items: center; justify-content: center; font-size: 14px; line-height: 1.4;
+    border: 1.5px dashed var(--line); border-radius: 8px; padding: 20px; text-align: center;
+    cursor: pointer; margin-bottom: 16px; color: var(--dim); min-height: 110px;
+    display: flex; align-items: center; justify-content: center; font-size: 13.5px; line-height: 1.5;
+    transition: border-color 0.15s ease;
   }
-  #dropzone img { max-height: 200px; max-width: 100%; border-radius: 6px; }
+  #dropzone:hover { border-color: var(--cyan); }
+  #dropzone img { max-height: 200px; max-width: 100%; border-radius: 5px; }
   button#convertBtn {
-    width: 100%; padding: 12px; border: none; border-radius: 8px;
-    background: #4f7cff; color: white; font-size: 15px; font-weight: 600; cursor: pointer;
+    width: 100%; padding: 12px; border: none; border-radius: 7px;
+    background: var(--cyan); color: #04141a; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    letter-spacing: 0.1px; transition: filter 0.15s ease;
   }
-  button#convertBtn:disabled { background: #34394a; cursor: not-allowed; }
-  .limit-note { font-size: 12px; color: #7d8492; margin-top: 8px; text-align: center; }
-  .error { color: #ff6b6b; font-size: 13px; margin-top: 10px; }
-  .muted { color: #6b7280; font-size: 12px; }
-  #canvasWrap { display: flex; justify-content: center; background: #0a0b0e; border-radius: 8px; padding: 12px; }
+  button#convertBtn:hover:not(:disabled) { filter: brightness(1.08); }
+  button#convertBtn:disabled { background: #262b33; color: var(--faint); cursor: not-allowed; }
+  .limit-note { font-size: 11.5px; color: var(--faint); margin-top: 8px; text-align: center; font-family: var(--font-mono); }
+  .error { color: #ff7a7a; font-size: 13px; margin-top: 10px; }
+  .muted { color: var(--faint); font-size: 12px; }
+  #canvasWrap { display: flex; justify-content: center; background: var(--ink); border-radius: 7px; padding: 12px; border: 1px solid var(--line); }
   canvas { max-width: 100%; box-shadow: 0 0 0 1px rgba(255,255,255,0.08); }
-  .report p { font-size: 14px; color: #cbd0d8; }
+  .report p { font-size: 13px; color: var(--dim); font-family: var(--font-mono); line-height: 1.7; margin: 4px 0; }
   .warnings {
-    background: #2a2311; border: 1px solid #4a3d15; border-radius: 8px;
-    padding: 10px 14px; font-size: 13px; color: #f2d477; margin-top: 10px;
+    background: #221c0c; border: 1px solid #4a3d1c; border-radius: 7px;
+    padding: 10px 14px; font-size: 12.5px; color: var(--yellow); margin-top: 10px; line-height: 1.5;
   }
+  .warnings strong { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.3px; }
   .warnings ul { margin: 8px 0 0; padding-left: 18px; }
   .download-btn {
     display: inline-block; margin-top: 12px; padding: 12px 18px;
-    background: #34c77b; color: #08120c; font-weight: 600; text-decoration: none;
-    border-radius: 8px; text-align: center; width: 100%;
+    background: var(--green); color: #06180d; font-weight: 600; text-decoration: none;
+    border-radius: 7px; text-align: center; width: 100%; font-size: 14.5px;
   }
   footer.pagefoot {
-    text-align: center; color: #545b68; font-size: 12px; margin-top: 30px;
+    text-align: center; color: var(--faint); font-size: 12px; margin-top: 36px;
+    font-family: var(--font-mono);
   }
 
   /* ---------- Modals (shared) ---------- */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(6,7,10,0.78);
+    position: fixed; inset: 0; background: rgba(6,7,10,0.8);
     display: flex; align-items: center; justify-content: center;
     padding: 16px; z-index: 100;
   }
   .modal {
     position: relative;
-    background: #171a21; border: 1px solid #262b35; border-radius: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
     width: 100%; max-width: 380px; padding: 24px 22px;
   }
-  .modal h2 { margin: 0 0 4px; font-size: 18px; text-align: center; }
-  .modal p.modal-sub { color: #9aa1ac; font-size: 13px; margin: 0 0 16px; text-align: center; line-height: 1.5; }
+  .modal h2 { font-family: var(--font-display); margin: 0 0 4px; font-size: 18px; text-align: center; font-weight: 600; }
+  .modal p.modal-sub { color: var(--dim); font-size: 13px; margin: 0 0 16px; text-align: center; line-height: 1.55; }
   .modal .error { min-height: 16px; }
   .btn-primary {
-    width: 100%; padding: 12px; border: none; border-radius: 8px;
-    background: #4f7cff; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;
+    width: 100%; padding: 12px; border: none; border-radius: 7px;
+    background: var(--cyan); color: #04141a; font-weight: 600; font-size: 14px; cursor: pointer;
   }
-  .btn-primary:disabled { background: #34394a; cursor: not-allowed; }
+  .btn-primary:disabled { background: #34394a; color: var(--faint); cursor: not-allowed; }
   .btn-secondary {
-    width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #2d3340; border-radius: 8px;
-    background: transparent; color: #e6e8ec; font-weight: 600; font-size: 14px; cursor: pointer;
+    width: 100%; padding: 12px; margin-top: 8px; border: 1px solid var(--line); border-radius: 7px;
+    background: transparent; color: var(--paper); font-weight: 600; font-size: 14px; cursor: pointer;
   }
   .btn-pro {
-    background: linear-gradient(135deg, #f2a154, #f2d477); color: #241a06; border: none;
+    background: var(--magenta); color: #2a0716; border: none;
   }
   .modal-close {
     width: 100%; padding: 10px; margin-top: 10px; border: none; background: transparent;
-    color: #7d8492; font-size: 13px; cursor: pointer;
+    color: var(--faint); font-size: 13px; cursor: pointer;
   }
   .modal-close-x {
     position: absolute; top: 14px; right: 16px; background: none; border: none;
-    color: #7d8492; font-size: 18px; cursor: pointer; line-height: 1;
+    color: var(--faint); font-size: 18px; cursor: pointer; line-height: 1;
   }
   .auth-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
   .auth-tab {
-    flex: 1; padding: 8px; text-align: center; border-radius: 7px; font-size: 13px;
-    border: 1px solid #2d3340; color: #b7bcc6; cursor: pointer; background: transparent;
+    flex: 1; padding: 8px; text-align: center; border-radius: 7px; font-size: 13px; font-weight: 500;
+    border: 1px solid var(--line); color: var(--dim); cursor: pointer; background: transparent;
   }
-  .auth-tab.active { background: #4f7cff; border-color: #4f7cff; color: #fff; }
+  .auth-tab.active { background: var(--cyan); border-color: var(--cyan); color: #04141a; }
 
   /* ---------- Rewarded-ad gate modal ---------- */
   .ad-illustration {
-    width: 64px; height: 64px; margin: 0 auto 14px; border-radius: 16px;
-    background: linear-gradient(135deg, #1c2029, #262b35);
-    border: 1px solid #2d3340;
-    display: flex; align-items: center; justify-content: center; font-size: 28px;
+    width: 60px; height: 60px; margin: 0 auto 14px; border-radius: 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--cyan);
   }
   .ad-gate-buttons { margin-top: 4px; }
   .ad-loading { text-align: center; padding: 6px 0 2px; }
   .ad-spinner {
-    width: 34px; height: 34px; margin: 0 auto 12px;
-    border: 3px solid #2d3340; border-top-color: #4f7cff; border-radius: 50%;
+    width: 32px; height: 32px; margin: 0 auto 12px;
+    border: 3px solid var(--line); border-top-color: var(--cyan); border-radius: 50%;
     animation: cmak-spin 0.8s linear infinite;
   }
   @keyframes cmak-spin { to { transform: rotate(360deg); } }
-  .ad-loading-text { font-size: 13px; color: #9aa1ac; margin: 0; }
+  .ad-loading-text { font-size: 13px; color: var(--dim); margin: 0; font-family: var(--font-mono); }
   .ad-progress-track {
-    width: 100%; height: 5px; background: #262b35; border-radius: 999px; overflow: hidden; margin-top: 10px;
+    width: 100%; height: 4px; background: var(--line); border-radius: 999px; overflow: hidden; margin-top: 10px;
   }
   .ad-progress-fill {
-    height: 100%; width: 0%; background: #4f7cff; transition: width 0.2s linear;
+    height: 100%; width: 0%; background: var(--cyan); transition: width 0.2s linear;
+  }
+
+  /* ---------- How it works ---------- */
+  .how-it-works {
+    padding: 56px 4px 8px;
+    border-top: 1px solid var(--line);
+    margin-top: 44px;
+  }
+  .how-it-works .section-heading {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    margin: 0 0 10px;
+  }
+  .how-it-works .section-sub {
+    text-align: center;
+    color: var(--dim);
+    font-size: 13.5px;
+    line-height: 1.6;
+    max-width: 46ch;
+    margin: 0 auto 34px;
+  }
+  .steps {
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .step {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .step .mark {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step h3 {
+    font-family: var(--font-display);
+    font-size: 15.5px; font-weight: 600;
+    color: var(--paper); margin: 0 0 6px;
+  }
+  .step p { color: var(--dim); font-size: 13px; line-height: 1.6; margin: 0; }
+
+  @media (min-width: 768px) {
+    .steps { flex-direction: row; }
+    .step { flex: 1; flex-direction: column; }
   }
 </style>
 </head>
@@ -296,7 +416,17 @@ onAuthStateChanged(auth, (user) => {
 <nav class="topnav" id="topnav">
   <div class="topnav-inner">
     <div class="brand">
-      <div class="brand-mark">C</div>
+      <div class="brand-mark">
+        <!-- registration mark — the classic press-alignment symbol -->
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="16" cy="16" r="13" stroke="#00b4d8" stroke-width="2"/>
+          <line x1="16" y1="1" x2="16" y2="10" stroke="#00b4d8" stroke-width="2"/>
+          <line x1="16" y1="22" x2="16" y2="31" stroke="#00b4d8" stroke-width="2"/>
+          <line x1="1" y1="16" x2="10" y2="16" stroke="#00b4d8" stroke-width="2"/>
+          <line x1="22" y1="16" x2="31" y2="16" stroke="#00b4d8" stroke-width="2"/>
+          <circle cx="16" cy="16" r="4" stroke="#00b4d8" stroke-width="2"/>
+        </svg>
+      </div>
       <div class="brand-name">Cmak</div>
     </div>
 
@@ -319,16 +449,19 @@ onAuthStateChanged(auth, (user) => {
       <button id="signOutTopBtn" class="btn-ghost" style="display:none;">Sign out</button>
     </div>
   </div>
+  <div class="colorbar"><span class="c"></span><span class="m"></span><span class="y"></span><span class="k"></span></div>
 </nav>
 
 <div class="app">
   <div class="hero">
+    <p class="eyebrow">Prepress · in your browser</p>
     <h1>Print-Ready Converter</h1>
     <p class="subtitle">Upload an image, set your trim size, and export a print-ready PDF with bleed and crop marks. Conversion runs entirely in your browser — nothing is uploaded to a server.</p>
   </div>
 
   <div class="grid">
     <div class="panel">
+      <h2 class="panel-heading">Setup <span class="tag">01</span></h2>
       <div id="dropzone">Tap to choose an image, or drag &amp; drop one here<br><span class="muted">JPG, PNG, WEBP</span></div>
       <input id="fileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
 
@@ -380,7 +513,7 @@ onAuthStateChanged(auth, (user) => {
     </div>
 
     <div class="panel">
-      <h2 style="font-size:16px; margin-top:0;">Preview &amp; Result</h2>
+      <h2 class="panel-heading">Preview &amp; result <span class="tag">02</span></h2>
       <div id="canvasWrap"><canvas id="previewCanvas" width="300" height="200"></canvas></div>
       <div id="report" class="report" style="margin-top:10px;"></div>
       <div id="warningsBox"></div>
@@ -388,7 +521,36 @@ onAuthStateChanged(auth, (user) => {
     </div>
   </div>
 
-  <footer class="pagefoot">Cmak · Print-ready PDFs, made in your browser.</footer>
+  <section class="how-it-works">
+    <h2 class="section-heading">How Cmak works</h2>
+    <p class="section-sub">A print-ready PDF in three steps, built for a proof, not a guess.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="mark">01</div>
+        <div>
+          <h3>Upload your image</h3>
+          <p>Choose a JPG, PNG, or WEBP file. It stays on your device — everything renders locally, nothing is sent to a server.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="mark">02</div>
+        <div>
+          <h3>Set print specs</h3>
+          <p>Dial in trim size, bleed, target DPI, color mode, and crop marks the way you would spec a job for the press.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="mark">03</div>
+        <div>
+          <h3>Download the PDF</h3>
+          <p>Get a print-ready file with accurate bleed and registration-quality crop marks, ready to hand to your printer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="pagefoot">Cmak · print-ready PDFs, made in your browser.</footer>
 </div>
 
 <!-- ================= Auth modal ================= -->
@@ -1027,235 +1189,5 @@ drawPreview();
   });
 })();
 </script>
-<!-- Professional Splash Screen -->
-<style>
-#intro-screen{
-    position:fixed;
-    inset:0;
-    background:linear-gradient(135deg,#0d1117,#161b22,#0d1117);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    z-index:99999;
-    transition:opacity .8s ease, visibility .8s ease;
-}
-
-.logo{
-    width:90px;
-    height:90px;
-    border-radius:20px;
-    overflow:hidden;
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
-    animation:zoomIn 1s ease;
-}
-
-.logo img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-}
-
-.title{
-    margin-top:18px;
-    font-size:38px;
-    font-weight:700;
-    color:#fff;
-    font-family:Arial,sans-serif;
-    letter-spacing:1px;
-}
-
-.subtitle{
-    margin-top:6px;
-    color:#bdbdbd;
-    font-size:15px;
-    font-family:Arial,sans-serif;
-}
-
-.loading{
-    width:180px;
-    height:4px;
-    background:#2a2a2a;
-    border-radius:10px;
-    overflow:hidden;
-    margin-top:30px;
-}
-
-.loading span{
-    display:block;
-    width:0%;
-    height:100%;
-    background:#00d084;
-    animation:load 2.5s linear forwards;
-}
-
-@keyframes load{
-    from{width:0%;}
-    to{width:100%;}
-}
-
-@keyframes zoomIn{
-    from{
-        transform:scale(.7);
-        opacity:0;
-    }
-    to{
-        transform:scale(1);
-        opacity:1;
-    }
-}
-</style>
-
-<div id="intro-screen">
-
-    
-        
-    
-
-    <div class="title">Cmak</div>
-
-    <div class="subtitle">
-        Professional Print-Ready Converter
-    </div>
-
-    <div class="loading">
-        <span></span>
-    </div>
-
-</div>
-
-<script>
-window.addEventListener("load",function(){
-
-    setTimeout(function(){
-
-        const intro=document.getElementById("intro-screen");
-
-        intro.style.opacity="0";
-        intro.style.visibility="hidden";
-
-        setTimeout(()=>{
-            intro.remove();
-        },800);
-
-    },2500);
-
-});
-</script>
-     <section class="how-it-works">
-  <h2>How Cmak Works</h2>
-  <p class="subtitle">
-    Create a professional print-ready PDF in three simple steps.
-  </p>
-
-  <div class="steps">
-
-    <div class="step">
-      <div class="circle">1</div>
-      <h3>Upload Image</h3>
-      <p>Choose a JPG, PNG or WEBP image from your device. Files stay private and are processed in your browser.</p>
-    </div>
-
-    <div class="step">
-      <div class="circle">2</div>
-      <h3>Configure Print Settings</h3>
-      <p>Select trim size, bleed, DPI, color mode and crop marks for professional printing.</p>
-    </div>
-
-    <div class="step">
-      <div class="circle">3</div>
-      <h3>Download PDF</h3>
-      <p>Instantly generate a high-quality print-ready PDF with accurate bleed and crop marks.</p>
-    </div>
-
-  </div>
-</section>
-
-<style>
-.how-it-works{
-padding:80px 20px;
-background:#0f1117;
-border-top:1px solid #232938;
-}
-
-.how-it-works h2{
-font-size:34px;
-font-weight:700;
-text-align:center;
-color:#f8fafc;
-margin:0 0 12px;
-}
-
-.subtitle{
-text-align:center;
-color:#9ca3af;
-font-size:17px;
-line-height:1.7;
-max-width:650px;
-margin:0 auto 50px;
-}
-
-.steps{
-max-width:900px;
-margin:auto;
-display:flex;
-flex-direction:column;
-gap:24px;
-}
-
-.step{
-background:#171b24;
-border:1px solid #2a3140;
-border-radius:18px;
-padding:30px;
-transition:.3s;
-}
-
-.step:hover{
-border-color:#2563eb;
-box-shadow:0 0 20px rgba(37,99,235,.25);
-}
-
-.circle{
-width:70px;
-height:70px;
-margin:0 auto 20px;
-border-radius:50%;
-background:#2563eb;
-color:#fff;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:28px;
-font-weight:700;
-}
-
-.step h3{
-text-align:center;
-font-size:24px;
-color:#fff;
-margin:0 0 12px;
-}
-
-.step p{
-text-align:center;
-color:#9ca3af;
-font-size:16px;
-line-height:1.8;
-margin:0;
-}
-
-@media(min-width:768px){
-.steps{
-flex-direction:row;
-}
-.step{
-flex:1;
-}
-}
-</style>
-     
-<!-- End Splash Screen -->
 </body>
 </html>
-
